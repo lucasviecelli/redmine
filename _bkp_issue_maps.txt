@@ -1,0 +1,69 @@
+
+
+def self.generate_treeview(issue_id, limit=nil)
+
+  @html = '<div class="tree">'
+  @html << '<ul><li>'
+  @issue_utilized = []
+
+  issue = find_issue_and_month_link(issue_id)
+  @html << '<ul>'
+
+  issue_map_1 = IssueMap.where(issue: issue.id)
+  issue_map_1 = issue_map_1.limit(limit) if limit.present?
+  issue_map_1.each do |map_1|
+    next if map_1.child == issue.id
+    next if @issue_utilized.include?(map_1.child)
+
+    @html << '<li>'
+    issue_1 = find_issue_and_month_link(map_1.child)
+    issue_map_2 = IssueMap.where(issue: issue_1.id) rescue []
+
+    @add = false
+    issue_map_2.each do |map_2|
+      next if map_2.child == issue.id
+      next if @issue_utilized.include?(map_2.child)
+
+      unless @add
+        @html << '<ul>'
+        @add = true
+      end
+
+      @html << '<li>'
+      issue_2 = find_issue_and_month_link(map_2.child)
+      issue_map_3 = IssueMap.where(issue: issue_2.id) rescue []
+
+      issue_map_3.each do |map_3|
+        next if @issue_utilized.include?(map_3.child)
+        @html << '<li>'
+        issue_3 = find_issue_and_month_link(map_3.child, true)
+        @html << '</li>'
+      end
+
+      @html << '</li>'
+    end
+    @html << '</ul>' if @add
+  end
+  @html << '</li></ul></div>'
+end
+
+def self.find_issue_and_month_link(issue_id, last_nivel=false, is_continue=false)
+  issue = Issue.find(issue_id) rescue nil
+  @issue_utilized << issue.id if issue
+  issue_continue = ''
+
+  if issue.present?
+    issue_continue = IssueMap.find_by(issue: issue.id).present? ? ' +' : '' if last_nivel
+    issue_continue = '+' if is_continue
+    @html << '<a href="' + Rails.application.routes.url_helpers.issue_path(issue) + '" target="_blank" title="' + issue.subject + '">' + "#{issue.id.to_s}#{split_name_issue(issue)} #{issue_continue}" + '</a>'
+  else
+    @html << '<a style="color: red;" href="#">Erro: ' + issue_id.to_s + '</a>'
+  end
+
+  issue
+end
+
+def self.split_name_issue(issue)
+  match = issue.subject.split(' ').count > 3 ? issue.subject.split(' ')[-4..-1] : issue.subject.split(' ')
+  "<br>" + match.map!{|a| a + "<br>"}.join('')
+end
