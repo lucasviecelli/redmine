@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  type: 
+  step_old: MyString
+  step_new: MyString
+
+two:
+  type: 
+  step_old: MyString
+  step_new: MyString

@@ -86,6 +86,8 @@ force_default_language_for_loggedin:
 protocol_custom_field_id:
   format: int
   default: 0
+url_webservice:
+  default: www.services.com.br
 host_name:
   default: localhost:3000
 protocol:

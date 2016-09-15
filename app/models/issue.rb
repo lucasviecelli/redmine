@@ -132,6 +132,13 @@ class Issue < ActiveRecord::Base
     end
   end
 
+  def get_value_protocol
+    setting = Setting.find_by_name('protocol_custom_field_id')
+    return unless setting.present?
+    custom_value = CustomValue.find_by(customized_id: self.id, custom_field_id: setting.value)
+    custom_value.value
+  end
+
   # Returns true if usr or current user is allowed to view the issue
   def visible?(usr=nil)
     (usr || User.current).allowed_to?(:view_issues, self.project) do |role, user|
@@ -1647,11 +1654,4 @@ class Issue < ActiveRecord::Base
       self.done_ratio ||= 0
     end
   end
-
-  # def get_value_protocol
-  #   setting = Setting.find_by_name('protocol_custom_field_id')
-  #   return unless self.tracker_id.present? || setting.present?
-  #   custom_value = CustomValue.find_by(customized_id: self.id, custom_field_id: setting.value)
-  #   custom_value.value
-  # end
 end
