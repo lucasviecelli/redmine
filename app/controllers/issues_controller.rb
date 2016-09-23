@@ -176,9 +176,6 @@ class IssuesController < ApplicationController
   def update
     return unless update_issue_from_params
 
-    # @issue.changes {"status_id"=>[3, 4]}
-    ChangeStep.has_changes?(@issue)
-
     @issue.save_attachments(params[:attachments] || (params[:issue] && params[:issue][:uploads]))
 
     saved = false

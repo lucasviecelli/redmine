@@ -99,7 +99,9 @@ class Issue < ActiveRecord::Base
   before_validation :clear_disabled_fields
   before_create :default_assign
   before_save :close_duplicates, :update_done_ratio_from_issue_status,
-              :force_updated_on_change, :update_closed_on, :set_assigned_to_was
+              :force_updated_on_change, :update_closed_on, :set_assigned_to_was,
+              :verify_change_step
+
   after_save {|issue| issue.send :after_project_change if !issue.id_changed? && issue.project_id_changed?}
   after_save :reschedule_following_issues, :update_nested_set_attributes,
              :update_parent_attributes, :create_journal
@@ -111,6 +113,18 @@ class Issue < ActiveRecord::Base
   after_save :clear_assigned_to_was
 
   # Returns a SQL conditions string used to find all issues visible by the specified user
+
+  def verify_change_step
+    ChangeStep.has_changes?(self)
+  end
+
+  def get_value_protocol
+    setting = Setting.find_by_name('protocol_custom_field_id')
+    return unless setting.present?
+    custom_value = CustomValue.find_by(customized_id: self.id, custom_field_id: setting.value)
+    custom_value.value
+  end
+
   def self.visible_condition(user, options={})
     Project.allowed_to_condition(user, :view_issues, options) do |role, user|
       if user.id && user.logged?
@@ -130,13 +144,6 @@ class Issue < ActiveRecord::Base
         "(#{table_name}.is_private = #{connection.quoted_false})"
       end
     end
-  end
-
-  def get_value_protocol
-    setting = Setting.find_by_name('protocol_custom_field_id')
-    return unless setting.present?
-    custom_value = CustomValue.find_by(customized_id: self.id, custom_field_id: setting.value)
-    custom_value.value
   end
 
   # Returns true if usr or current user is allowed to view the issue
