@@ -115,7 +115,7 @@ class Issue < ActiveRecord::Base
   # Returns a SQL conditions string used to find all issues visible by the specified user
 
   def verify_change_step
-    ChangeStep.has_changes?(self)
+    Config.changes?(self)
   end
 
   def get_value_protocol

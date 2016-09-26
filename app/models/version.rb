@@ -20,6 +20,9 @@ class Version < ActiveRecord::Base
   after_update :update_issues_from_sharing_change
   belongs_to :project
   has_many :fixed_issues, :class_name => 'Issue', :foreign_key => 'fixed_version_id', :dependent => :nullify
+
+  before_save :verify_change_step
+  
   acts_as_customizable
   acts_as_attachable :view_permission => :view_files,
                      :edit_permission => :manage_files,
@@ -53,6 +56,10 @@ class Version < ActiveRecord::Base
     'sharing',
     'custom_field_values',
     'custom_fields'
+
+  def verify_change_step
+    Config.changes?(self)
+  end
 
   # Returns true if +user+ or current user is allowed to view the version
   def visible?(user=User.current)

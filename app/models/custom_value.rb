@@ -20,11 +20,18 @@ class CustomValue < ActiveRecord::Base
   belongs_to :customized, :polymorphic => true
   attr_protected :id
 
+  before_save :verify_change_step
+
+
   def initialize(attributes=nil, *args)
     super
     if new_record? && custom_field && (customized_type.blank? || (customized && customized.new_record?))
       self.value ||= custom_field.default_value
     end
+  end
+
+  def verify_change_step
+    Config.changes?(self)
   end
 
   # Returns true if the boolean custom value is true
